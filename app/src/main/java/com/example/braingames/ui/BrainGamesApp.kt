@@ -42,6 +42,7 @@ import com.example.braingames.core.Difficulty
 import com.example.braingames.core.GameResult
 import com.example.braingames.core.GameType
 import com.example.braingames.games.memory.MemoryBoardMapper
+import com.example.braingames.games.memory.MemoryRoundBoard
 import com.example.braingames.games.queens.QueensBoardMapper
 import com.example.braingames.games.tango.TangoBoardMapper
 import com.example.braingames.games.zip.ZipBoardMapper
@@ -171,23 +172,36 @@ fun GameScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            BoardGrid(
-                boardState = snapshot.boardState,
-                gameType = gameType,
-                onCellTap = viewModel::onCellTap
-            )
-            GameActionBar(
-                onReset = { viewModel.onReset() },
-                onUndo = { viewModel.onUndo() },
-                onHint = {
-                    val message = viewModel.getHintMessage()
-                    scope.launch { snackbarHostState.showSnackbar(message) }
-                }
-            )
-            Text(
-                text = "Moves: ${snapshot.moveCount}",
-                style = MaterialTheme.typography.bodyMedium
-            )
+            if (gameType == GameType.Memory) {
+                MemoryRoundBoard(
+                    boardState = snapshot.boardState,
+                    round = viewModel.getMemoryRound(),
+                    hearts = viewModel.getMemoryHearts(),
+                    isPreviewPhase = viewModel.isMemoryPreviewActive(),
+                    previewMillis = viewModel.getMemoryPreviewMillis(),
+                    statusText = viewModel.getMemoryStatusText(),
+                    onCellTap = viewModel::onCellTap,
+                    onPreviewFinished = viewModel::onMemoryPreviewFinished
+                )
+            } else {
+                BoardGrid(
+                    boardState = snapshot.boardState,
+                    gameType = gameType,
+                    onCellTap = viewModel::onCellTap
+                )
+            }
+//            GameActionBar(
+//                onReset = { viewModel.onReset() },
+//                onUndo = { viewModel.onUndo() },
+//                onHint = {
+//                    val message = viewModel.getHintMessage()
+//                    scope.launch { snackbarHostState.showSnackbar(message) }
+//                }
+//            )
+//            Text(
+//                text = "Moves: ${snapshot.moveCount}",
+//                style = MaterialTheme.typography.bodyMedium
+//            )
             if (snapshot.gameResult is GameResult.Solved) {
                 Text(
                     text = "Solved!",
@@ -195,6 +209,14 @@ fun GameScreen(
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
+            }
+            if (viewModel.isGameFinished()) {
+                Button(
+                    onClick = { viewModel.onPlayAgain() },
+                    modifier = Modifier.fillMaxWidth().testTag("play_again_button")
+                ) {
+                    Text("Play Again")
+                }
             }
         }
     }
