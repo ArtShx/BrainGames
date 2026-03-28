@@ -97,23 +97,23 @@ fun HomeScreen(
                     fontWeight = FontWeight.SemiBold
                 )
             }
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Difficulty.entries.forEach { difficulty ->
-                        AssistChip(
-                            onClick = { onDifficultySelected(difficulty) },
-                            label = { Text(difficulty.name) },
-                            colors = AssistChipDefaults.assistChipColors(
-                                containerColor = if (difficulty == selectedDifficulty) {
-                                    MaterialTheme.colorScheme.primaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.surfaceVariant
-                                }
-                            )
-                        )
-                    }
-                }
-            }
+//            item {
+//                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+//                    Difficulty.entries.forEach { difficulty ->
+//                        AssistChip(
+//                            onClick = { onDifficultySelected(difficulty) },
+//                            label = { Text(difficulty.name) },
+//                            colors = AssistChipDefaults.assistChipColors(
+//                                containerColor = if (difficulty == selectedDifficulty) {
+//                                    MaterialTheme.colorScheme.primaryContainer
+//                                } else {
+//                                    MaterialTheme.colorScheme.surfaceVariant
+//                                }
+//                            )
+//                        )
+//                    }
+//                }
+//            }
             items(games) { game ->
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Row(
@@ -149,11 +149,11 @@ fun GameScreen(
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(viewModel) {
-        viewModel.snapshot.collectLatest {
-            if (it.gameResult is GameResult.InvalidMove) {
-                snackbarHostState.showSnackbar("Invalid move for this game.")
-            }
-        }
+//        viewModel.snapshot.collectLatest {
+//            if (it.gameResult is GameResult.InvalidMove) {
+//                snackbarHostState.showSnackbar("Invalid move for this game.")
+//            }
+//        }
     }
 
     Scaffold(
