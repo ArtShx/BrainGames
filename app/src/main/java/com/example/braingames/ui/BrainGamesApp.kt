@@ -43,6 +43,7 @@ import com.example.braingames.core.GameResult
 import com.example.braingames.core.GameType
 import com.example.braingames.games.memory.MemoryBoardMapper
 import com.example.braingames.games.memory.MemoryRoundBoard
+import com.example.braingames.games.simon.SimonSaysRoundBoard
 import com.example.braingames.games.queens.QueensBoardMapper
 import com.example.braingames.games.tango.TangoBoardMapper
 import com.example.braingames.games.zip.ZipBoardMapper
@@ -128,7 +129,7 @@ fun HomeScreen(
                             onClick = { onGameSelected(game) },
                             modifier = Modifier.testTag("play_${game.name}")
                         ) {
-                            Text("Play ${game.name}")
+                            Text(game.name)
                         }
                     }
                 }
@@ -182,6 +183,22 @@ fun GameScreen(
                     statusText = viewModel.getMemoryStatusText(),
                     onCellTap = viewModel::onCellTap,
                     onPreviewFinished = viewModel::onMemoryPreviewFinished
+                )
+            } else if (gameType == GameType.SimonSays) {
+                SimonSaysRoundBoard(
+                    boardState = snapshot.boardState,
+                    sequence = viewModel.getSimonSequence(),
+                    targetLength = viewModel.getSimonRound(),
+                    maxLength = viewModel.getSimonMaxRound(),
+                    hearts = viewModel.getSimonHearts(),
+                    isPlaybackPhase = viewModel.isSimonPlaybackActive(),
+                    playbackEpoch = viewModel.getSimonPlaybackEpoch(),
+                    highlightStepMillis = viewModel.getSimonStepHighlightMillis(),
+                    gapMillis = viewModel.getSimonStepGapMillis(),
+                    statusText = viewModel.getSimonStatusText(),
+                    onCellTap = viewModel::onCellTap,
+                    onPlaybackTick = viewModel::onSimonPlaybackTick,
+                    onPlaybackFinished = viewModel::onSimonPlaybackFinished
                 )
             } else {
                 BoardGrid(
@@ -274,6 +291,7 @@ fun BoardGrid(
                             Text(
                                 when (gameType) {
                                     GameType.Memory -> MemoryBoardMapper.mapCellDisplay(cell)
+                                    GameType.SimonSays -> ""
                                     GameType.Queens -> QueensBoardMapper.mapCellDisplay(cell)
                                     GameType.Zip -> ZipBoardMapper.mapCellDisplay(cell)
                                     GameType.Tango -> TangoBoardMapper.mapCellDisplay(cell)

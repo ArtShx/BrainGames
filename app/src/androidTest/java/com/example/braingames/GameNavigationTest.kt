@@ -16,6 +16,7 @@ class GameNavigationTest {
     fun selecting_memory_opens_game_screen() {
         composeRule.onNodeWithTag("play_Memory").performClick()
         composeRule.onNodeWithText("Memory").assertIsDisplayed()
-        composeRule.onNodeWithText("Moves: 0").assertIsDisplayed()
+        composeRule.onNodeWithText("Round 1/10").assertIsDisplayed()
+        composeRule.onNodeWithText("Hearts: 3").assertIsDisplayed()
     }
 }

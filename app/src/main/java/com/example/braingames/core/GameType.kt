@@ -4,7 +4,8 @@ enum class GameType {
     Queens,
     Zip,
     Tango,
-    Memory
+    Memory,
+    SimonSays
 }
 
 enum class Difficulty {
