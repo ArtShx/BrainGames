@@ -89,5 +89,7 @@ interface PuzzleGenerator {
 data class GameSnapshot(
     val boardState: BoardState,
     val moveCount: Int = 0,
-    val gameResult: GameResult = GameResult.InProgress
+    val gameResult: GameResult = GameResult.InProgress,
+    val isMistake: Boolean? = null,
+    val earlyReturn: Boolean = false
 )

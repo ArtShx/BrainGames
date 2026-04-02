@@ -41,29 +41,31 @@ class GameViewModel(
         Log.d("GameViewModel", "init $simonSaysController ... $memoryController")
     }
 
-    fun onCellTap(row: Int, col: Int) {
+    fun onCellTap(row: Int, col: Int): MutableStateFlow<GameSnapshot> {
         Log.d("GameViewModel", "onCellTap: $row, $col, gametype: $gameType")
 
         memoryController?.let { controller ->
             _snapshot.value = controller.onCellTap(_snapshot.value, row, col)
-            return
+            return _snapshot
         }
         simonSaysController?.let { controller ->
             val resultSnapshot = controller.onCellTap(_snapshot.value, row, col)
             // display cell tapped
             viewModelScope.launch {
                 _snapshot.value = simonSaysController.onUserTapHighlight(_snapshot.value, row, col)
-                delay(500)
+                delay(420)
                 _snapshot.value = resultSnapshot
             }
-            return
+            //_snapshot.value = resultSnapshot
+            return _snapshot
+
         }
         val current = _snapshot.value
         val existing = current.boardState.cellAt(row, col).value
         val nextValue = engine.nextValue(current.boardState, row, col, existing)
         if (!engine.isMoveValid(current.boardState, row, col, nextValue)) {
             _snapshot.value = current.copy(gameResult = GameResult.InvalidMove("Invalid move"))
-            return
+            return _snapshot
         }
 
         moveHistory.addLast(current.boardState)
@@ -82,6 +84,7 @@ class GameViewModel(
             moveCount = nextMoveCount,
             gameResult = nextResult
         )
+        return _snapshot
     }
 
     fun onMemoryPreviewFinished() {

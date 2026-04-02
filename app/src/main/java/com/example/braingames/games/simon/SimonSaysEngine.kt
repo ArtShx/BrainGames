@@ -15,13 +15,13 @@ class SimonSaysEngine : GameRuleEngine {
 
     val maxRound: Int = 10
     val initialHearts: Int = 3
-    val stepHighlightMillis: Long = 600L
+    val stepHighlightMillis: Long = 420L
     val stepGapMillis: Long = 200L
 
     fun gridSide(difficulty: Difficulty): Int = when (difficulty) {
-        Difficulty.Easy -> 3
-        Difficulty.Medium -> 4
-        Difficulty.Hard -> 5
+        Difficulty.Easy -> 2
+        Difficulty.Medium -> 2
+        Difficulty.Hard -> 3
     }
 
     fun createBoard(

@@ -6,7 +6,6 @@ import com.example.braingames.core.BoardState
 import com.example.braingames.core.Difficulty
 import com.example.braingames.core.GameResult
 import com.example.braingames.core.GameSnapshot
-import kotlinx.coroutines.delay
 import kotlin.random.Random
 
 class SimonSaysGameController(
@@ -51,7 +50,8 @@ class SimonSaysGameController(
     fun onPlaybackTick(current: GameSnapshot, stepIndex: Int?): GameSnapshot {
         Log.d("SimonSaysGameController", "onPlaybackTick: $stepIndex")
         if (!playbackActive) return current
-        val highlight = stepIndex?.let { sequence.getOrNull(it) }
+        val highlight = stepIndex?.let { sequence.getOrNull(it);  }
+
         return current.copy(
             boardState = engine.createBoard(
                 difficulty = difficulty,
@@ -83,23 +83,21 @@ class SimonSaysGameController(
 
     fun onCellTap(current: GameSnapshot, row: Int, col: Int): GameSnapshot {
         Log.d("SimonSaysGameController", "onCellTap: $row, $col .. $isProcessingTap")
-        if (playbackActive) {
-            return current.copy(gameResult = GameResult.InvalidMove("Watch the pattern"))
-        }
+        if (playbackActive)
+            return current.copy(gameResult = GameResult.InvalidMove("Watch the pattern"), earlyReturn = true)
+
 
         if (gameOver) return current
-        if (current.gameResult is GameResult.Solved) {
-            return current.copy(gameResult = GameResult.InvalidMove("Already solved"))
-        }
+        if (current.gameResult is GameResult.Solved)
+            return current.copy(gameResult = GameResult.InvalidMove("Already solved"), isMistake = true, earlyReturn = true)
+
         val side = engine.gridSide(difficulty)
         if (row !in 0 until side || col !in 0 until side) {
-            return current.copy(gameResult = GameResult.InvalidMove("Invalid cell"))
+            return current.copy(gameResult = GameResult.InvalidMove("Invalid cell"), earlyReturn = true)
         }
-        if (sequence.isEmpty()) return current
-        if (isProcessingTap) return current
-
+        if (sequence.isEmpty()) return current.copy(earlyReturn = true)
+        if (isProcessingTap) return current.copy(earlyReturn = true)
         isProcessingTap = true
-        Log.d("SimonSaysGameController", "onCellTap lock")
 
         val coord = BoardCoordinate(row, col)
         val expected = sequence[inputIndex]
@@ -112,10 +110,10 @@ class SimonSaysGameController(
                 playbackActive = false
                 statusText = "Game over. You ran out of hearts."
                 isProcessingTap = false
-                Log.d("SimonSaysGameController", "onCellTap release 1")
                 return current.copy(
                     gameResult = GameResult.InvalidMove("Game over"),
-                    moveCount = nextMoveCount
+                    moveCount = nextMoveCount,
+                    isMistake = true
                 )
             }
             inputIndex = 0
@@ -123,7 +121,6 @@ class SimonSaysGameController(
             playbackEpoch++
             statusText = "Missed. Hearts left: $hearts. Watch again."
             isProcessingTap = false
-            Log.d("SimonSaysGameController", "onCellTap release 2")
 
             return current.copy(
                 boardState = engine.createBoard(
@@ -133,7 +130,8 @@ class SimonSaysGameController(
                     inputProgress = 0
                 ),
                 moveCount = nextMoveCount,
-                gameResult = GameResult.InProgress
+                gameResult = GameResult.InProgress,
+                isMistake = true
             )
         }
 
@@ -143,7 +141,6 @@ class SimonSaysGameController(
                 gameOver = false
                 statusText = "You reached length ${engine.maxRound}!"
                 isProcessingTap = false
-                Log.d("SimonSaysGameController", "onCellTap release 3")
 
                 return current.copy(
                     boardState = engine.createBoard(
@@ -153,7 +150,8 @@ class SimonSaysGameController(
                         inputProgress = sequence.size
                     ),
                     moveCount = nextMoveCount,
-                    gameResult = GameResult.Solved(moveCount = nextMoveCount)
+                    gameResult = GameResult.Solved(moveCount = nextMoveCount),
+                    isMistake = false
                 )
             }
             appendRandomStep(allowAnyCoordinate = false)
@@ -162,19 +160,18 @@ class SimonSaysGameController(
             playbackEpoch++
             statusText = "Nice! Watch the next pattern."
             isProcessingTap = false
-            Log.d("SimonSaysGameController", "onCellTap release 4")
-
             return current.copy(
                 moveCount = nextMoveCount,
-                gameResult = GameResult.InProgress
+                gameResult = GameResult.InProgress,
+                isMistake = false
             )
         }
 
-        Log.d("SimonSaysGameController", "onCellTap release 5")
         isProcessingTap = false
         return current.copy(
             moveCount = nextMoveCount,
-            gameResult = GameResult.InProgress
+            gameResult = GameResult.InProgress,
+            isMistake = null
         )
     }
 
@@ -201,6 +198,7 @@ class SimonSaysGameController(
     fun getStepHighlightMillis(): Long = engine.stepHighlightMillis
     fun getStepGapMillis(): Long = engine.stepGapMillis
     fun getMaxRound(): Int = engine.maxRound
+    //fun isMistake()
 
     fun getHintMessage(): String {
         val phase = if (playbackActive) "Playback" else "Your turn"

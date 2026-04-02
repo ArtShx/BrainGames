@@ -20,16 +20,25 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import com.example.braingames.R
 import com.example.braingames.core.BoardCoordinate
 import com.example.braingames.core.BoardState
+import com.example.braingames.core.GameSnapshot
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
 @Composable
 fun SimonSaysRoundBoard(
@@ -43,12 +52,14 @@ fun SimonSaysRoundBoard(
     highlightStepMillis: Long,
     gapMillis: Long,
     statusText: String,
-    onCellTap: (Int, Int) -> Unit,
+    onCellTap: (Int, Int) -> MutableStateFlow<GameSnapshot>,
     onPlaybackTick: (Int?) -> Unit,
     onPlaybackFinished: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val phaseState = rememberUpdatedState(isPlaybackPhase)
+    val scope = rememberCoroutineScope() // Get a scope tied to this Composable's lifecycle
+    var cellClickEnabled by remember { mutableStateOf(true) }
 
     // Audio
     // remember the SoundPool
@@ -64,30 +75,56 @@ fun SimonSaysRoundBoard(
             )
             .build()
     }
-    val soundId = remember { soundPool.load(context, R.raw.example, 1) }
+    val sound1 = remember { soundPool.load(context, R.raw.simon1, 1) }
+    val sound2 = remember { soundPool.load(context, R.raw.simon2, 1) }
+    val sound3 = remember { soundPool.load(context, R.raw.simon3, 1) }
+    val sound4 = remember { soundPool.load(context, R.raw.simon4, 1) }
+    val sound_pass = remember { soundPool.load(context, R.raw.up, 1) }
+
+    LaunchedEffect(cellClickEnabled) {
+        Log.d("SimonSaysRoundBoard", "LaunchedEffect cellClickEnabled $cellClickEnabled")
+    }
+
+    LaunchedEffect(phaseState) {
+        Log.d("SimonSaysRoundBoard", "LaunchedEffect phaseState ${phaseState.value}")
+    }
 
     LaunchedEffect(playbackEpoch) {
-        Log.d("SimonSaysRoundBoard", "LaunchedEffect ${phaseState.value}")
+        // playback cells
+        Log.d("SimonSaysRoundBoard", "LaunchedEffect playbackEpoch ${phaseState.value}")
         if (!phaseState.value) return@LaunchedEffect
         if (sequence.isEmpty()) {
             onPlaybackFinished()
             return@LaunchedEffect
         }
-        Log.d("SimonSaysRoundBoard", "LaunchedEffect2 ckp1")
+        cellClickEnabled = false
+
+        delay(500)
+        if (sequence.size > 1)
+            soundPool.play(sound_pass, 1f, 1f, 0, 0, 1f)
+
+        Log.d("SimonSaysRoundBoard", "Playback")
         delay(600)
-        Log.d("SimonSaysRoundBoard", "LaunchedEffect2 ckp2")
-        for (i in sequence.indices) {
+        for ((i, cell) in sequence.withIndex()) {
             onPlaybackTick(i)
-            Log.d("SimonSaysRoundBoard", "LaunchedEffect2 ckp3")
+
+            val sound: Int
+            if (cell.row == 0 && cell.col == 0) {
+                sound = sound1
+            } else if (cell.row == 0 && cell.col == 1) {
+                sound = sound2
+            } else if (cell.row == 1 && cell.col == 0) {
+                sound = sound3
+            } else {
+                sound = sound4
+            }
+            soundPool.play(sound, 1f, 1f, 0, 0, 1f)
             delay(highlightStepMillis)
             onPlaybackTick(null)
-            Log.d("SimonSaysRoundBoard", "LaunchedEffect2 ckp4")
             delay(gapMillis)
         }
-        Log.d("SimonSaysRoundBoard", "LaunchedEffect2 ckp5")
         onPlaybackFinished()
-        Log.d("SimonSaysRoundBoard", "LaunchedEffect2 ckp6")
-        delay(300)
+        cellClickEnabled = true
     }
 
     DisposableEffect(Unit) {
@@ -95,44 +132,6 @@ fun SimonSaysRoundBoard(
             soundPool.release()
         }
     }
-
-
-    @Composable
-    fun AudibleButton() {
-//        val context = LocalContext.current
-//
-//        // 1. Initialize and remember the SoundPool
-//        val soundPool = remember {
-//            SoundPool.Builder()
-//                .setMaxStreams(3)
-//                .setAudioAttributes(
-//                    AudioAttributes.Builder()
-//                        .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
-//                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-//                        .build()
-//                )
-//                .build()
-//        }
-//
-//        // 2. Load the sound (returns a soundId)
-//        val soundId = remember { soundPool.load(context, R.raw.example, 1) }
-
-        // 3. Clean up memory when this Composable leaves the screen
-        DisposableEffect(Unit) {
-            onDispose {
-                soundPool.release()
-            }
-        }
-
-        Button(onClick = {
-            // 4. Play! (soundId, leftVol, rightVol, priority, loop, rate)
-            soundPool.play(soundId, 1f, 1f, 0, 0, 1f)
-        }) {
-            Text("Click Me for Sound")
-        }
-    }
-
-    //AudibleButton()
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -158,7 +157,7 @@ fun SimonSaysRoundBoard(
         }
         val cellDp = when {
             boardState.rows >= 5 -> 40.dp
-            else -> 48.dp
+            else -> 80.dp
         }
         boardState.cells.forEachIndexed { rowIndex, row ->
             Row(
@@ -169,15 +168,39 @@ fun SimonSaysRoundBoard(
                     val isActive = cell.isHighlighted || cell.value == "●"
                     Card(
                         modifier = Modifier.size(cellDp),
+                        enabled = true,
                         onClick = {
                             //if (!isPlaybackPhase && hearts > 0) {
-                            onCellTap(rowIndex, colIndex)
-                            soundPool.play(soundId, 1f, 1f, 0, 0, 1f)
-
-                            //soundPool.play(soundId, 1f, 1f, 0, 0, 1f)
-                            //view.playSoundEffect(android.view.SoundEffectConstants.CLICK)
-
-                            //}
+                            scope.launch {
+                                if (cellClickEnabled) {
+                                    cellClickEnabled = false
+                                    val snapshot = onCellTap(rowIndex, colIndex)
+                                    if (!snapshot.value.earlyReturn) {
+                                        val sound: Int
+                                        if (rowIndex == 0 && colIndex == 0) {
+                                            sound = sound1
+                                        } else if (rowIndex == 0 && colIndex == 1) {
+                                            sound = sound2
+                                        } else if (rowIndex == 1 && colIndex == 0) {
+                                            sound = sound3
+                                        } else {
+                                            sound = sound4
+                                        }
+                                        soundPool.play(sound, 1f, 1f, 0, 0, 1f)
+                                        delay(420)
+                                        Log.d(
+                                            "SimonSaysRoundBoard",
+                                            "mistake ${snapshot.value.isMistake} $sound"
+                                        )
+                                        if (snapshot.value.isMistake == false) {
+                                            delay(100)
+                                            soundPool.play(sound_pass, 1f, 1f, 0, 0, 1f)
+                                            delay(500)
+                                        }
+                                        //cellClickEnabled = true
+                                    }
+                                }
+                            }
                         },
                         shape = RoundedCornerShape(8.dp),
                         colors = CardDefaults.cardColors(
@@ -188,7 +211,7 @@ fun SimonSaysRoundBoard(
                             }
                         )
                     ) {
-                        Column(modifier = Modifier.fillMaxSize()) {}
+                        //Column(modifier = Modifier.fillMaxSize()) {}
                     }
                 }
             }
