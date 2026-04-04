@@ -9,7 +9,9 @@ import com.example.braingames.core.Difficulty
 import com.example.braingames.core.GameResult
 import com.example.braingames.core.GameSnapshot
 import com.example.braingames.core.GameType
-import com.example.braingames.games.GameFactory
+import com.example.braingames.games.factory.GameFactory
+import com.example.braingames.games.factory.ControllerFactory
+import com.example.braingames.games.interfaces.GameController
 import com.example.braingames.games.memory.MemoryGameController
 import com.example.braingames.games.memory.MemoryEngine
 import com.example.braingames.games.simon.SimonSaysEngine
@@ -28,12 +30,13 @@ class GameViewModel(
     private val engine = GameFactory.engineFor(gameType)
     private val memoryController = (engine as? MemoryEngine)?.let { MemoryGameController(it) }
     private val simonSaysController =
-        (engine as? SimonSaysEngine)?.let { SimonSaysGameController(it, difficulty) }
+        (engine as? SimonSaysEngine)?.let { SimonSaysGameController(it) }
     private val puzzleGenerator = DefaultPuzzleGenerator()
     private val moveHistory = ArrayDeque<BoardState>()
 
     private val _snapshot = MutableStateFlow(GameSnapshot(boardState = initialBoard()))
     val snapshot: StateFlow<GameSnapshot> = _snapshot.asStateFlow()
+    val controller = ControllerFactory.make(gameType, engine)
 
     init {
         memoryController?.let { _snapshot.value = it.reset() }
@@ -57,6 +60,15 @@ class GameViewModel(
                 _snapshot.value = resultSnapshot
             }
             //_snapshot.value = resultSnapshot
+//            if (controller.isSolved()) {
+//                val context = LocalContext.current
+//                val db = Room.databaseBuilder(
+//                    context,
+//                    AppDatabase::class.java, "braingames-db"
+//                ).build()
+//                val hsDao = db.highscoreDao()
+//
+//            }
             return _snapshot
 
         }
@@ -85,6 +97,10 @@ class GameViewModel(
             gameResult = nextResult
         )
         return _snapshot
+    }
+
+    fun isSolved() {
+
     }
 
     fun onMemoryPreviewFinished() {

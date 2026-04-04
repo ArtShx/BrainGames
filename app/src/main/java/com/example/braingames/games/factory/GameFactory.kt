@@ -1,4 +1,4 @@
-package com.example.braingames.games
+package com.example.braingames.games.factory
 
 import com.example.braingames.core.GameRuleEngine
 import com.example.braingames.core.GameType

@@ -6,13 +6,16 @@ import com.example.braingames.core.BoardState
 import com.example.braingames.core.Difficulty
 import com.example.braingames.core.GameResult
 import com.example.braingames.core.GameSnapshot
+import com.example.braingames.database.AppDatabase
+import com.example.braingames.games.interfaces.GameController
+import com.example.braingames.games.memory.MemoryEngine
 import kotlin.random.Random
+//class MemoryGameController (override val memoryEngine: MemoryEngine): GameController {
 
 class SimonSaysGameController(
-    private val engine: SimonSaysEngine,
-    private val difficulty: Difficulty,
-    private val random: Random = Random.Default
-) {
+    override val engine: SimonSaysEngine,
+
+): GameController {
     private val sequence = mutableListOf<BoardCoordinate>()
     private var inputIndex: Int = 0
     private var hearts: Int = engine.initialHearts
@@ -21,6 +24,9 @@ class SimonSaysGameController(
     private var playbackEpoch: Int = 0
     private var statusText: String = ""
     private var isProcessingTap = false
+    private var isSolved = false
+    private val difficulty: Difficulty = Difficulty.Easy
+    private val random: Random = Random.Default
 
 
     fun initialBoard(): BoardState =
@@ -141,6 +147,7 @@ class SimonSaysGameController(
                 gameOver = false
                 statusText = "You reached length ${engine.maxRound}!"
                 isProcessingTap = false
+                isSolved = true
 
                 return current.copy(
                     boardState = engine.createBoard(
@@ -198,7 +205,7 @@ class SimonSaysGameController(
     fun getStepHighlightMillis(): Long = engine.stepHighlightMillis
     fun getStepGapMillis(): Long = engine.stepGapMillis
     fun getMaxRound(): Int = engine.maxRound
-    //fun isMistake()
+    fun isSolved(): Boolean = isSolved
 
     fun getHintMessage(): String {
         val phase = if (playbackActive) "Playback" else "Your turn"

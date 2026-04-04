@@ -4,16 +4,15 @@ import com.example.braingames.core.BoardCoordinate
 import com.example.braingames.core.BoardState
 import com.example.braingames.core.GameResult
 import com.example.braingames.core.GameSnapshot
+import com.example.braingames.games.interfaces.GameController
 
 /**
  * Keeps all state and transitions for the Memory game.
  * The UI/view model can delegate to this controller to stay generic.
  */
-class MemoryGameController(
-    private val memoryEngine: MemoryEngine
-) {
+class MemoryGameController (override val engine: MemoryEngine): GameController {
     private var round: Int = 1
-    private var hearts: Int = memoryEngine.initialHearts
+    private var hearts: Int = engine.initialHearts
     private var targets: Set<BoardCoordinate> = emptySet()
     private val tapped: MutableSet<BoardCoordinate> = mutableSetOf()
 
@@ -25,7 +24,7 @@ class MemoryGameController(
 
     fun reset(): GameSnapshot {
         round = 1
-        hearts = memoryEngine.initialHearts
+        hearts = engine.initialHearts
         targets = emptySet()
         tapped.clear()
         previewActive = false
@@ -42,7 +41,7 @@ class MemoryGameController(
         previewActive = false
 
         return current.copy(
-            boardState = memoryEngine.createRoundBoard(
+            boardState = engine.createRoundBoard(
                 round = round,
                 targets = targets,
                 revealed = false,
@@ -86,7 +85,7 @@ class MemoryGameController(
         }
 
         tapped.add(coord)
-        val updatedBoard = memoryEngine.createRoundBoard(
+        val updatedBoard = engine.createRoundBoard(
             round = round,
             targets = targets,
             revealed = false,
@@ -96,9 +95,9 @@ class MemoryGameController(
         val nextMoveCount = current.moveCount + 1
 
         if (tapped.size == targets.size) {
-            if (round >= memoryEngine.maxRound) {
+            if (round >= engine.maxRound) {
                 gameOver = false
-                statusText = "You won all ${memoryEngine.maxRound} rounds."
+                statusText = "You won all ${engine.maxRound} rounds."
                 return current.copy(
                     boardState = updatedBoard,
                     moveCount = nextMoveCount,
@@ -126,11 +125,11 @@ class MemoryGameController(
 
     private fun startMemoryRound(current: GameSnapshot, reuseRound: Boolean): GameSnapshot {
         if (!reuseRound) {
-            targets = memoryEngine.generateTargets(round)
+            targets = engine.generateTargets(round)
         }
 
         previewActive = true
-        val board = memoryEngine.createRoundBoard(
+        val board = engine.createRoundBoard(
             round = round,
             targets = targets,
             revealed = true,
@@ -143,12 +142,12 @@ class MemoryGameController(
     fun getHearts(): Int = hearts
     fun isPreviewActive(): Boolean = previewActive
     fun getStatusText(): String = statusText
-    fun getPreviewMillis(): Long = memoryEngine.previewMillis
+    fun getPreviewMillis(): Long = engine.previewMillis
     fun isGameOver(): Boolean = gameOver
 
     fun getHintMessage(): String {
         val previewLabel = if (previewActive) "Preview" else "Answer"
-        return "Round $round/${memoryEngine.maxRound} | Hearts: $hearts | Phase: $previewLabel"
+        return "Round $round/${engine.maxRound} | Hearts: $hearts | Phase: $previewLabel"
     }
 }
 

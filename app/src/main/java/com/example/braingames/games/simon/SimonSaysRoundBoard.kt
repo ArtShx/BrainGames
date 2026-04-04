@@ -37,8 +37,8 @@ import com.example.braingames.core.GameSnapshot
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import com.example.braingames.games.interfaces.GameController
 
 @Composable
 fun SimonSaysRoundBoard(
@@ -55,7 +55,8 @@ fun SimonSaysRoundBoard(
     onCellTap: (Int, Int) -> MutableStateFlow<GameSnapshot>,
     onPlaybackTick: (Int?) -> Unit,
     onPlaybackFinished: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    controller: GameController
 ) {
     val phaseState = rememberUpdatedState(isPlaybackPhase)
     val scope = rememberCoroutineScope() // Get a scope tied to this Composable's lifecycle
@@ -80,6 +81,10 @@ fun SimonSaysRoundBoard(
     val sound3 = remember { soundPool.load(context, R.raw.simon3, 1) }
     val sound4 = remember { soundPool.load(context, R.raw.simon4, 1) }
     val sound_pass = remember { soundPool.load(context, R.raw.up, 1) }
+
+
+    //val users: List<User> = userDao.getAll()
+
 
     LaunchedEffect(cellClickEnabled) {
         Log.d("SimonSaysRoundBoard", "LaunchedEffect cellClickEnabled $cellClickEnabled")
@@ -197,8 +202,8 @@ fun SimonSaysRoundBoard(
                                             soundPool.play(sound_pass, 1f, 1f, 0, 0, 1f)
                                             delay(500)
                                         }
-                                        //cellClickEnabled = true
                                     }
+                                    cellClickEnabled = true
                                 }
                             }
                         },

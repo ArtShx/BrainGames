@@ -198,7 +198,8 @@ fun GameScreen(
                     statusText = viewModel.getSimonStatusText(),
                     onCellTap = viewModel::onCellTap,
                     onPlaybackTick = viewModel::onSimonPlaybackTick,
-                    onPlaybackFinished = viewModel::onSimonPlaybackFinished
+                    onPlaybackFinished = viewModel::onSimonPlaybackFinished,
+                    controller = viewModel.controller,
                 )
             } else {
                 BoardGrid(
