@@ -1,7 +1,7 @@
 ### Games
 
 - [x] Memory (cells)
-- [ ] Memory in-order
+- [x] Simon Says
 - [ ] Memory (words)
 - [ ] Tango / Zuzu
 - [ ] Binary Game
@@ -11,5 +11,12 @@
 - [ ] Hashi
 - [ ] Slant
 - [ ] Pipes
-- [ ] Simon Says
 - [ ] Dual N-Back (?)
+- [ ] KenKen
+
+### Features
+- [ ] Store scores
+- [ ] Improve difficulty
+- Practice mode
+  - [ ] Infinite hearts;
+  - [ ] Change game settings (grid size, difficulty)
