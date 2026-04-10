@@ -14,6 +14,13 @@ interface HighScoreDao {
 
     // Get Top 10 scores for a specific game, sorted by score (DESC) then time (ASC)
     @Query("""
+        SELECT * FROM high_scores
+        LIMIT 10
+    """)
+    suspend fun getAllScores(): List<HighScore>
+
+    // Get Top 10 scores for a specific game, sorted by score (DESC) then time (ASC)
+    @Query("""
         SELECT * FROM high_scores 
         WHERE gameReferenceId = :gameId AND difficulty = :difficulty 
         ORDER BY score DESC, duration ASC 
