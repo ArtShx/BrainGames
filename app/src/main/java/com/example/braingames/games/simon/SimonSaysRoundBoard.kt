@@ -38,7 +38,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.setValue
-import com.example.braingames.games.interfaces.GameController
 
 @Composable
 fun SimonSaysRoundBoard(
@@ -55,8 +54,7 @@ fun SimonSaysRoundBoard(
     onCellTap: (Int, Int) -> MutableStateFlow<GameSnapshot>,
     onPlaybackTick: (Int?) -> Unit,
     onPlaybackFinished: () -> Unit,
-    modifier: Modifier = Modifier,
-    controller: GameController
+    modifier: Modifier = Modifier
 ) {
     val phaseState = rememberUpdatedState(isPlaybackPhase)
     val scope = rememberCoroutineScope() // Get a scope tied to this Composable's lifecycle

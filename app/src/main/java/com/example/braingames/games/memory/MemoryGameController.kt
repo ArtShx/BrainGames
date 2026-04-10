@@ -18,11 +18,11 @@ class MemoryGameController (override val engine: MemoryEngine): GameController {
 
     private var previewActive: Boolean = false
     private var statusText: String = ""
-    private var gameOver: Boolean = false
+    override var gameOver: Boolean = false
 
     fun initialBoard(): BoardState = BoardState.empty(rows = 4, cols = 4)
 
-    fun reset(): GameSnapshot {
+    override fun reset(): GameSnapshot {
         round = 1
         hearts = engine.initialHearts
         targets = emptySet()
@@ -51,7 +51,7 @@ class MemoryGameController (override val engine: MemoryEngine): GameController {
         )
     }
 
-    fun onCellTap(current: GameSnapshot, row: Int, col: Int): GameSnapshot {
+    override fun onCellTap(current: GameSnapshot, row: Int, col: Int): GameSnapshot {
         if (previewActive || current.gameResult is GameResult.Solved) {
             return current.copy(gameResult = GameResult.InvalidMove("Wait for preview to end"))
         }
@@ -143,7 +143,6 @@ class MemoryGameController (override val engine: MemoryEngine): GameController {
     fun isPreviewActive(): Boolean = previewActive
     fun getStatusText(): String = statusText
     fun getPreviewMillis(): Long = engine.previewMillis
-    fun isGameOver(): Boolean = gameOver
 
     fun getHintMessage(): String {
         val previewLabel = if (previewActive) "Preview" else "Answer"

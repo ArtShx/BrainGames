@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
 import com.example.braingames.core.BoardState
 import com.example.braingames.core.Difficulty
 import com.example.braingames.core.GameResult
@@ -47,6 +48,8 @@ import com.example.braingames.games.simon.SimonSaysRoundBoard
 import com.example.braingames.games.queens.QueensBoardMapper
 import com.example.braingames.games.tango.TangoBoardMapper
 import com.example.braingames.games.zip.ZipBoardMapper
+import com.example.braingames.ui.games.memory.MemoryViewModel
+import com.example.braingames.ui.games.simonsays.SimonSaysViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -144,7 +147,14 @@ fun GameScreen(
     difficulty: Difficulty,
     onBack: () -> Unit
 ) {
-    val viewModel = remember(gameType, difficulty) { GameViewModel(gameType, difficulty) }
+    val viewModel = remember(gameType, difficulty) {
+        when (gameType) {
+            GameType.Memory -> MemoryViewModel()
+            GameType.SimonSays -> SimonSaysViewModel()
+            else -> TODO("Not implemented yet")
+        }
+    }
+
     val snapshot by viewModel.snapshot.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -173,7 +183,7 @@ fun GameScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (gameType == GameType.Memory) {
+            if (viewModel is MemoryViewModel) {
                 MemoryRoundBoard(
                     boardState = snapshot.boardState,
                     round = viewModel.getMemoryRound(),
@@ -184,7 +194,7 @@ fun GameScreen(
                     onCellTap = viewModel::onCellTap,
                     onPreviewFinished = viewModel::onMemoryPreviewFinished
                 )
-            } else if (gameType == GameType.SimonSays) {
+            } else if (viewModel is SimonSaysViewModel) {
                 SimonSaysRoundBoard(
                     boardState = snapshot.boardState,
                     sequence = viewModel.getSimonSequence(),
@@ -198,8 +208,8 @@ fun GameScreen(
                     statusText = viewModel.getSimonStatusText(),
                     onCellTap = viewModel::onCellTap,
                     onPlaybackTick = viewModel::onSimonPlaybackTick,
-                    onPlaybackFinished = viewModel::onSimonPlaybackFinished,
-                    controller = viewModel.controller,
+                    onPlaybackFinished = viewModel::onSimonPlaybackFinished
+                    //controller = viewModel.controller,
                 )
             } else {
                 BoardGrid(
