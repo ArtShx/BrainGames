@@ -1,6 +1,7 @@
 package com.example.braingames.ui.games.simonsays
 
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -18,7 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class SimonSaysViewModel: BaseGameViewModel() {
+class SimonSaysViewModel(override val context: Context) : BaseGameViewModel() {
     override val engine = GameFactory.engineFor(GameType.SimonSays)
     override val controller = SimonSaysGameController(engine as SimonSaysEngine)
     override val _snapshot = MutableStateFlow(GameSnapshot(boardState = controller.initialBoard()))

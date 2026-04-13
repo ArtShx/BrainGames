@@ -35,6 +35,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -147,17 +148,17 @@ fun GameScreen(
     difficulty: Difficulty,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
     val viewModel = remember(gameType, difficulty) {
         when (gameType) {
-            GameType.Memory -> MemoryViewModel()
-            GameType.SimonSays -> SimonSaysViewModel()
+            GameType.Memory -> MemoryViewModel(context)
+            GameType.SimonSays -> SimonSaysViewModel(context)
             else -> TODO("Not implemented yet")
         }
     }
 
     val snapshot by viewModel.snapshot.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(viewModel) {
 //        viewModel.snapshot.collectLatest {
@@ -192,7 +193,8 @@ fun GameScreen(
                     previewMillis = viewModel.getMemoryPreviewMillis(),
                     statusText = viewModel.getMemoryStatusText(),
                     onCellTap = viewModel::onCellTap,
-                    onPreviewFinished = viewModel::onMemoryPreviewFinished
+                    onPreviewFinished = viewModel::onMemoryPreviewFinished,
+                    viewModel = viewModel
                 )
             } else if (viewModel is SimonSaysViewModel) {
                 SimonSaysRoundBoard(
@@ -209,7 +211,7 @@ fun GameScreen(
                     onCellTap = viewModel::onCellTap,
                     onPlaybackTick = viewModel::onSimonPlaybackTick,
                     onPlaybackFinished = viewModel::onSimonPlaybackFinished
-                    //controller = viewModel.controller,
+
                 )
             } else {
                 BoardGrid(
@@ -239,6 +241,7 @@ fun GameScreen(
                 )
             }
             if (viewModel.isGameFinished()) {
+                viewModel.onGameFinished()
                 Button(
                     onClick = { viewModel.onPlayAgain() },
                     modifier = Modifier.fillMaxWidth().testTag("play_again_button")

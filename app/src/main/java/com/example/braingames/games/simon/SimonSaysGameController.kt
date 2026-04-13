@@ -6,6 +6,7 @@ import com.example.braingames.core.BoardState
 import com.example.braingames.core.Difficulty
 import com.example.braingames.core.GameResult
 import com.example.braingames.core.GameSnapshot
+import com.example.braingames.database.entity.HighScore
 import com.example.braingames.games.interfaces.GameController
 import kotlin.random.Random
 
@@ -24,6 +25,7 @@ class SimonSaysGameController(
     private val difficulty: Difficulty = Difficulty.Easy
     private val random: Random = Random.Default
     override var gameOver: Boolean = false
+    var startTime: Long = System.currentTimeMillis()
 
 
     fun initialBoard(): BoardState =
@@ -39,6 +41,7 @@ class SimonSaysGameController(
         playbackActive = true
         playbackEpoch++
         statusText = "Watch the pattern"
+        startTime = System.currentTimeMillis()
         return GameSnapshot(
             boardState = engine.createBoard(
                 difficulty = difficulty,
@@ -47,6 +50,20 @@ class SimonSaysGameController(
                 inputProgress = 0
             ),
             gameResult = GameResult.InProgress
+        )
+    }
+
+    override fun getElapsedTime(): Long {
+        return System.currentTimeMillis() - startTime
+    }
+
+    override fun getHighScore(): HighScore {
+        return HighScore(
+            score = sequence.size,
+            timestamp = System.currentTimeMillis(),
+            gameReferenceId = "SimonSays",
+            duration = getElapsedTime(),
+            difficulty ="Default"
         )
     }
 

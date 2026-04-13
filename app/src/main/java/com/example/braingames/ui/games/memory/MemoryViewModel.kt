@@ -1,5 +1,6 @@
 package com.example.braingames.ui.games.memory
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.braingames.core.BoardState
@@ -13,7 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class MemoryViewModel: BaseGameViewModel() {
+class MemoryViewModel(override val context: Context) : BaseGameViewModel() {
     override val engine = GameFactory.engineFor(GameType.Memory)
     override val controller = MemoryGameController(engine as MemoryEngine)
     override val _snapshot = MutableStateFlow(GameSnapshot(boardState = controller.initialBoard()))
@@ -35,8 +36,9 @@ class MemoryViewModel: BaseGameViewModel() {
 //    }
 
     override fun onReset() {
+        super.onReset()
         moveHistory.clear()
-        _snapshot.value = controller.reset()
+//        _snapshot.value = controller.reset()
          return
     }
 
@@ -50,4 +52,5 @@ class MemoryViewModel: BaseGameViewModel() {
     fun isMemoryPreviewActive(): Boolean = controller.isPreviewActive()
     fun getMemoryStatusText(): String = controller.getStatusText()
     fun getMemoryPreviewMillis(): Long = controller.getPreviewMillis()
+    //fun getElapsedTime(): String = getElapsedTime() //controller.getElapsedTime()
 }

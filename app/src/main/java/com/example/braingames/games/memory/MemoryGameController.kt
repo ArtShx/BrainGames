@@ -1,9 +1,13 @@
 package com.example.braingames.games.memory
 
+import androidx.compose.ui.platform.LocalContext
 import com.example.braingames.core.BoardCoordinate
 import com.example.braingames.core.BoardState
 import com.example.braingames.core.GameResult
 import com.example.braingames.core.GameSnapshot
+import com.example.braingames.core.GameType
+import com.example.braingames.database.AppDatabase
+import com.example.braingames.database.entity.HighScore
 import com.example.braingames.games.interfaces.GameController
 
 /**
@@ -19,6 +23,7 @@ class MemoryGameController (override val engine: MemoryEngine): GameController {
     private var previewActive: Boolean = false
     private var statusText: String = ""
     override var gameOver: Boolean = false
+    var startTime: Long = System.currentTimeMillis()
 
     fun initialBoard(): BoardState = BoardState.empty(rows = 4, cols = 4)
 
@@ -30,9 +35,24 @@ class MemoryGameController (override val engine: MemoryEngine): GameController {
         previewActive = false
         gameOver = false
         statusText = "Round $round"
+        startTime = System.currentTimeMillis()
         return startMemoryRound(
             current = GameSnapshot(boardState = initialBoard()),
             reuseRound = false
+        )
+    }
+
+    override fun getElapsedTime(): Long {
+        return System.currentTimeMillis() - startTime
+    }
+
+    override fun getHighScore(): HighScore {
+        return HighScore(
+            score = round,
+            timestamp = System.currentTimeMillis(),
+            gameReferenceId = GameType.Memory.toString(),
+            duration = getElapsedTime(),
+            difficulty = "Default"
         )
     }
 

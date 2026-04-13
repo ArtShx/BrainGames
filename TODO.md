@@ -2,6 +2,7 @@
 
 - [x] Memory (cells)
 - [x] Simon Says
+- [ ] Memory (link 2 points in the grid, add walls for more difficulty)
 - [ ] Memory (words)
 - [ ] Tango / Zuzu
 - [ ] Binary Game

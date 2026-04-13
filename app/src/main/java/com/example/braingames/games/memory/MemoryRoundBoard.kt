@@ -1,6 +1,5 @@
 package com.example.braingames.games.memory
 
-import androidx.activity.result.launch
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,10 +26,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.room.Room
 import com.example.braingames.core.BoardState
 import com.example.braingames.database.AppDatabase
 import com.example.braingames.database.entity.HighScore
+import com.example.braingames.ui.games.memory.MemoryViewModel
+import com.example.braingames.utils.formatTimestamp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -43,7 +44,8 @@ fun MemoryRoundBoard(
     statusText: String,
     onCellTap: (Int, Int) -> Unit,
     onPreviewFinished: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: MemoryViewModel
 ) {
     LaunchedEffect(round, isPreviewPhase) {
         if (isPreviewPhase) {
@@ -57,42 +59,40 @@ fun MemoryRoundBoard(
     val scope = rememberCoroutineScope()
 
     var highScores by remember { mutableStateOf(listOf<HighScore>()) }
+    val elapsedTime by viewModel.elapsedTime.collectAsState()
 
     LaunchedEffect(Unit) {
-        highScores = db.highScoreDao().getTopScores("Memory", "Easy") // Make sure this exists in your DAO
+        highScores = db.highScoreDao().getAllScores() // Make sure this exists in your DAO
     }
+//
+//    Button(
+//        onClick = {
+//            scope.launch {
+//                val newScore = HighScore(
+//                    score = (10..100).random(), // Random score for testing
+//                    timestamp = System.currentTimeMillis(),
+//                    gameReferenceId = "Memory",
+//                    duration = 5000,
+//                    difficulty = "Easy"
+//                )
+//                db.highScoreDao().insertScore(newScore)
+//                // Refresh the list after adding
+//                highScores = db.highScoreDao().getAllScores()
+//            }
+//        },
+//        modifier = Modifier.fillMaxWidth()
+//    ) {
+//        Text("Add Random High Score")
+//    }
+//
+//    Text(text = "Recent Scores:", style = MaterialTheme.typography.headlineSmall)
 
-    Button(
-        onClick = {
-            scope.launch {
-                val newScore = HighScore(
-                    score = (10..100).random(), // Random score for testing
-                    timestamp = System.currentTimeMillis(),
-                    gameReferenceId = "Memory",
-                    duration = 5000,
-                    difficulty = "Easy"
-                )
-                db.highScoreDao().insertScore(newScore)
-                // Refresh the list after adding
-                highScores = db.highScoreDao().getAllScores()
-            }
-        },
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Text("Add Random High Score")
-    }
-
-    Text(text = "Recent Scores:", style = MaterialTheme.typography.headlineSmall)
-
-    // 4. List to display scores
-    LazyColumn(
-        //modifier = Modifier.weight(1f).fillMaxWidth()
-    ) {
+    LazyColumn() {
         items(highScores) { score ->
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp),
+                    .padding(vertical = 1.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 Row(
@@ -100,7 +100,7 @@ fun MemoryRoundBoard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("Score: ${score.score}")
-                    Text("Date: ${score.timestamp}")
+                    Text("Date: ${formatTimestamp(score.timestamp)}")
                 }
             }
         }
@@ -114,6 +114,10 @@ fun MemoryRoundBoard(
         Text(
             text = "Round $round/10",
             style = MaterialTheme.typography.titleMedium
+        )
+        Text(
+            text = "Elapsed time: $elapsedTime",
+            style = MaterialTheme.typography.bodyMedium
         )
         Text(
             text = "Hearts: $hearts",
