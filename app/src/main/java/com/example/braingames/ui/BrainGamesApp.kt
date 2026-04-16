@@ -12,18 +12,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.sharp.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,14 +34,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import com.example.braingames.core.BoardState
 import com.example.braingames.core.Difficulty
 import com.example.braingames.core.GameResult
@@ -51,13 +52,12 @@ import com.example.braingames.games.tango.TangoBoardMapper
 import com.example.braingames.games.zip.ZipBoardMapper
 import com.example.braingames.ui.games.memory.MemoryViewModel
 import com.example.braingames.ui.games.simonsays.SimonSaysViewModel
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 @Composable
 fun BrainGamesApp() {
     var selectedGame by remember { mutableStateOf<GameType?>(null) }
     var selectedDifficulty by remember { mutableStateOf(Difficulty.Easy) }
+    var highscoreView by remember { mutableStateOf(false) }
 
     if (selectedGame == null) {
         HomeScreen(
@@ -69,7 +69,10 @@ fun BrainGamesApp() {
         GameScreen(
             gameType = selectedGame!!,
             difficulty = selectedDifficulty,
-            onBack = { selectedGame = null }
+            onBack = { if (highscoreView) highscoreView = false else selectedGame = null },
+            onHighScoreClick = { highscoreView = true },
+            isShowingHighScore = highscoreView
+
         )
     }
 }
@@ -146,7 +149,9 @@ fun HomeScreen(
 fun GameScreen(
     gameType: GameType,
     difficulty: Difficulty,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onHighScoreClick: () -> Unit,
+    isShowingHighScore: Boolean
 ) {
     val context = LocalContext.current
     val viewModel = remember(gameType, difficulty) {
@@ -173,80 +178,76 @@ fun GameScreen(
         topBar = {
             GameTopBar(
                 title = gameType.name,
-                onBack = onBack
+                onBack = onBack,
+                onHighScoreClick = if (isShowingHighScore) null else onHighScoreClick
             )
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            if (viewModel is MemoryViewModel) {
-                MemoryRoundBoard(
-                    boardState = snapshot.boardState,
-                    round = viewModel.getMemoryRound(),
-                    hearts = viewModel.getMemoryHearts(),
-                    isPreviewPhase = viewModel.isMemoryPreviewActive(),
-                    previewMillis = viewModel.getMemoryPreviewMillis(),
-                    statusText = viewModel.getMemoryStatusText(),
-                    onCellTap = viewModel::onCellTap,
-                    onPreviewFinished = viewModel::onMemoryPreviewFinished,
-                    viewModel = viewModel
-                )
-            } else if (viewModel is SimonSaysViewModel) {
-                SimonSaysRoundBoard(
-                    boardState = snapshot.boardState,
-                    sequence = viewModel.getSimonSequence(),
-                    targetLength = viewModel.getSimonRound(),
-                    maxLength = viewModel.getSimonMaxRound(),
-                    hearts = viewModel.getSimonHearts(),
-                    isPlaybackPhase = viewModel.isSimonPlaybackActive(),
-                    playbackEpoch = viewModel.getSimonPlaybackEpoch(),
-                    highlightStepMillis = viewModel.getSimonStepHighlightMillis(),
-                    gapMillis = viewModel.getSimonStepGapMillis(),
-                    statusText = viewModel.getSimonStatusText(),
-                    onCellTap = viewModel::onCellTap,
-                    onPlaybackTick = viewModel::onSimonPlaybackTick,
-                    onPlaybackFinished = viewModel::onSimonPlaybackFinished
+        if (isShowingHighScore) {
+            HighScoreScreen(gameType)
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                if (viewModel is MemoryViewModel) {
+                    MemoryRoundBoard(
+                        boardState = snapshot.boardState,
+                        round = viewModel.getMemoryRound(),
+                        hearts = viewModel.getMemoryHearts(),
+                        isPreviewPhase = viewModel.isMemoryPreviewActive(),
+                        previewMillis = viewModel.getMemoryPreviewMillis(),
+                        statusText = viewModel.getMemoryStatusText(),
+                        onCellTap = viewModel::onCellTap,
+                        onPreviewFinished = viewModel::onMemoryPreviewFinished,
+                        viewModel = viewModel
+                    )
+                } else if (viewModel is SimonSaysViewModel) {
+                    SimonSaysRoundBoard(
+                        boardState = snapshot.boardState,
+                        sequence = viewModel.getSimonSequence(),
+                        targetLength = viewModel.getSimonRound(),
+                        maxLength = viewModel.getSimonMaxRound(),
+                        hearts = viewModel.getSimonHearts(),
+                        isPlaybackPhase = viewModel.isSimonPlaybackActive(),
+                        playbackEpoch = viewModel.getSimonPlaybackEpoch(),
+                        highlightStepMillis = viewModel.getSimonStepHighlightMillis(),
+                        gapMillis = viewModel.getSimonStepGapMillis(),
+                        statusText = viewModel.getSimonStatusText(),
+                        onCellTap = viewModel::onCellTap,
+                        onPlaybackTick = viewModel::onSimonPlaybackTick,
+                        onPlaybackFinished = viewModel::onSimonPlaybackFinished
 
-                )
-            } else {
-                BoardGrid(
-                    boardState = snapshot.boardState,
-                    gameType = gameType,
-                    onCellTap = viewModel::onCellTap
-                )
-            }
-//            GameActionBar(
-//                onReset = { viewModel.onReset() },
-//                onUndo = { viewModel.onUndo() },
-//                onHint = {
-//                    val message = viewModel.getHintMessage()
-//                    scope.launch { snackbarHostState.showSnackbar(message) }
-//                }
-//            )
-//            Text(
-//                text = "Moves: ${snapshot.moveCount}",
-//                style = MaterialTheme.typography.bodyMedium
-//            )
-            if (snapshot.gameResult is GameResult.Solved) {
-                Text(
-                    text = "Solved!",
-                    modifier = Modifier.testTag("solved_banner"),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-            if (viewModel.isGameFinished()) {
-                viewModel.onGameFinished()
-                Button(
-                    onClick = { viewModel.onPlayAgain() },
-                    modifier = Modifier.fillMaxWidth().testTag("play_again_button")
-                ) {
-                    Text("Play Again")
+                    )
+                } else {
+                    BoardGrid(
+                        boardState = snapshot.boardState,
+                        gameType = gameType,
+                        onCellTap = viewModel::onCellTap
+                    )
+                }
+
+                if (snapshot.gameResult is GameResult.Solved) {
+                    Text(
+                        text = "Solved!",
+                        modifier = Modifier.testTag("solved_banner"),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                if (viewModel.isGameFinished()) {
+                    viewModel.onGameFinished()
+                    Button(
+                        onClick = { viewModel.onPlayAgain() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("play_again_button")
+                    ) {
+                        Text("Play Again")
+                    }
                 }
             }
         }
@@ -255,15 +256,42 @@ fun GameScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GameTopBar(title: String, onBack: (() -> Unit)? = null) {
+fun GameTopBar(
+    title: String,
+    onBack: (() -> Unit)? = null,
+    onSettingsClick: (() -> Boolean)? = null,
+    onHighScoreClick: (() -> Unit)? = null
+
+) {
     TopAppBar(
         title = { Text(title) },
         navigationIcon = {
             if (onBack != null) {
-                TextButton(onClick = onBack) {
-                    Text("Back")
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back"
+                    )
                 }
             }
+        },
+        actions = {
+            if (onHighScoreClick != null) {
+                IconButton(onClick = onHighScoreClick) {
+                    Icon(
+                        imageVector = Icons.Sharp.Star,
+                        contentDescription = "HighScore"
+                    )
+
+                }
+            }
+            IconButton(onClick = {}) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings"
+                )
+            }
+
         }
     )
 }

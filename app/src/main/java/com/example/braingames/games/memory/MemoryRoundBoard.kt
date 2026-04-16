@@ -87,24 +87,6 @@ fun MemoryRoundBoard(
 //
 //    Text(text = "Recent Scores:", style = MaterialTheme.typography.headlineSmall)
 
-    LazyColumn() {
-        items(highScores) { score ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 1.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Row(
-                    modifier = Modifier.padding(8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("Score: ${score.score}")
-                    Text("Date: ${formatTimestamp(score.timestamp)}")
-                }
-            }
-        }
-    }
 
 
     Column(

@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import com.example.braingames.core.GameType
 import com.example.braingames.database.entity.HighScore
 
 @Dao
@@ -15,9 +16,15 @@ interface HighScoreDao {
     // Get Top 10 scores for a specific game, sorted by score (DESC) then time (ASC)
     @Query("""
         SELECT * FROM high_scores
-        LIMIT 10
     """)
     suspend fun getAllScores(): List<HighScore>
+
+    // Get Top 10 scores for a specific game, sorted by score (DESC) then time (ASC)
+    @Query("""
+        SELECT * FROM high_scores
+        WHERE gameReferenceId = :gameType
+    """)
+    suspend fun getAllScoresByGame(gameType: String): List<HighScore>
 
     // Get Top 10 scores for a specific game, sorted by score (DESC) then time (ASC)
     @Query("""
