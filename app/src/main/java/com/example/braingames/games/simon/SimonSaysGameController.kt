@@ -6,6 +6,7 @@ import com.example.braingames.core.BoardState
 import com.example.braingames.core.Difficulty
 import com.example.braingames.core.GameResult
 import com.example.braingames.core.GameSnapshot
+import com.example.braingames.core.GameType
 import com.example.braingames.database.entity.HighScore
 import com.example.braingames.games.interfaces.GameController
 import kotlin.random.Random
@@ -61,7 +62,7 @@ class SimonSaysGameController(
         return HighScore(
             score = sequence.size,
             timestamp = System.currentTimeMillis(),
-            gameReferenceId = "SimonSays",
+            gameReferenceId = GameType.SimonSays.toString(),
             duration = getElapsedTime(),
             difficulty ="Default"
         )
@@ -218,12 +219,6 @@ class SimonSaysGameController(
     fun getStepHighlightMillis(): Long = engine.stepHighlightMillis
     fun getStepGapMillis(): Long = engine.stepGapMillis
     fun getMaxRound(): Int = engine.maxRound
-    fun isSolved(): Boolean = isSolved
-
-    fun getHintMessage(): String {
-        val phase = if (playbackActive) "Playback" else "Your turn"
-        return "Length ${sequence.size}/${engine.maxRound} | Hearts: $hearts | Phase: $phase"
-    }
 
     private fun appendRandomStep(allowAnyCoordinate: Boolean) {
         val side = engine.gridSide(difficulty)

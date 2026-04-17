@@ -17,6 +17,7 @@ import com.example.braingames.database.entity.HighScore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.concurrent.Executors
 
 @Database(entities = [HighScore::class, GameMetadata::class], version = 1)
 @TypeConverters(Converters::class)
@@ -36,6 +37,9 @@ abstract class AppDatabase : RoomDatabase() {
                     "my_database"
                 )
                     .addCallback(AppDatabaseCallback(context))
+                    .setQueryCallback({ sqlQuery, bindArgs ->
+                        println("SQL Query: $sqlQuery SQL Args: $bindArgs")
+                    }, Executors.newSingleThreadExecutor())
                     .build()
                 INSTANCE = instance
                 instance
@@ -54,16 +58,17 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        private suspend fun populateDatabase(db: AppDatabase) {
-            var gameDao = db.gameMetadataDao()
-
-            gameDao.insert(
-                GameMetadata(
-                    gameId = GameType.Memory,
-                    gameName = GameType.Memory.toString(),
-                    description = null
+        suspend fun populateDatabase(db: AppDatabase) {
+            val gameDao = db.gameMetadataDao()
+            for (gameType in GameType.entries) {
+                gameDao.insert(
+                    GameMetadata(
+                        gameId = gameType,
+                        gameName = gameType.toString(),
+                        description = null
+                    )
                 )
-            )
+            }
         }
     }
 }
