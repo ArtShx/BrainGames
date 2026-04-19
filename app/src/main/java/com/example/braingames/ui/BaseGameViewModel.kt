@@ -51,7 +51,7 @@ abstract class BaseGameViewModel : ViewModel() {
     fun isGameFinished(): Boolean {
         return when {
             _snapshot.value.gameResult is GameResult.Solved -> true
-            controller.isGameOver() == true -> true
+            controller.isGameOver() -> true
             else -> false
         }
     }

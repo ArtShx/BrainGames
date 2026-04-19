@@ -133,10 +133,11 @@ fun HomeScreen(
                     ) {
                         Text(text = game.name)
                         Button(
-                            onClick = { onGameSelected(game) },
+                            onClick = { if (game.isImplemented()) onGameSelected(game) },
                             modifier = Modifier.testTag("play_${game.name}")
                         ) {
-                            Text(game.name)
+                            val text = if (game.isImplemented()) game.name else "Coming Soon"
+                            Text(text)
                         }
                     }
                 }
